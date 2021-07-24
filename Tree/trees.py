@@ -134,6 +134,13 @@ def grabTree(filename):
     fr = open(filename,'rb')
     return pickle.load(fr)
 
-storeTree(myTree,'classifierStorage.txt')
-print(grabTree('classifierStorage.txt'))
+# storeTree(myTree,'classifierStorage.txt')
+# print(grabTree('classifierStorage.txt'))
 
+# 隐形眼镜数据集
+fr=open('lenses.txt')
+lenses = [inst.strip().split('\t') for inst in fr.readlines()]
+lensesLabels = ['age', 'prescript', 'astigmatic', 'tearRate']
+lensesTree=createTree(lenses,lensesLabels)
+# print(lensesTree)
+treePlotter.createPlot(lensesTree)
