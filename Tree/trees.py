@@ -119,9 +119,9 @@ import treePlotter
 
 myDat,labels=createDataSet()
 myTree=treePlotter.retrieveTree(0)
-# print(myTree)
-tt=classify(myTree,labels,[1,0])
-# print(tt)
+print(myTree)
+tt=classify(myTree,labels,[1,1])
+print(tt)
 
 def storeTree(inputTree,filename):
     import pickle
@@ -138,9 +138,9 @@ def grabTree(filename):
 # print(grabTree('classifierStorage.txt'))
 
 # 隐形眼镜数据集
-fr=open('lenses.txt')
-lenses = [inst.strip().split('\t') for inst in fr.readlines()]
-lensesLabels = ['age', 'prescript', 'astigmatic', 'tearRate']
-lensesTree=createTree(lenses,lensesLabels)
-# print(lensesTree)
-treePlotter.createPlot(lensesTree)
+# fr=open('lenses.txt')
+# lenses = [inst.strip().split('\t') for inst in fr.readlines()]
+# lensesLabels = ['age', 'prescript', 'astigmatic', 'tearRate']
+# lensesTree=createTree(lenses,lensesLabels)
+# # print(lensesTree)
+# treePlotter.createPlot(lensesTree)
