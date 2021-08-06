@@ -99,7 +99,56 @@ def buildStump(dataArr,classLabels,D):
 datMat,classLabels=loadSimpData()
 D=mat(ones((5,1))/5)
 bestStump,minError,bestClasEst=buildStump(datMat,classLabels,D)
-print("***********************")
-print(bestStump)
-print(minError)
-print(bestClasEst)
+# print("***********************")
+# print(bestStump)
+# print(minError)
+# print(bestClasEst)
+
+#INPUT:dataArr:训练集 classLabels:训练集的标签  numIt:弱分类器最多的个数
+#OUPUT:weakClassArr:弱分类器的线性组合
+def adaBoostTrainDS(dataArr,classLabels,numIt=40):
+    """
+    [summary]:
+    对每次迭代：
+        利用buildStump()函数找到最佳的单层决策树
+        将最佳单层决策树加入到单层决策树数组
+        计算alpha
+        计算新的权重向量D
+        更新累计类别估计值
+        如果错误率等于0.0，则退出循环
+    
+    Arguments:
+        dataArr {[type]} -- 数据
+        classLabels {[type]} -- 标签
+    
+    Keyword Arguments:
+        numIt {int} -- 迭代次数 (default: {40})
+    
+    Returns:
+        weakClassArr
+        aggClassEst
+    """
+    weakClassArr = []
+    m = shape(dataArr)[0]
+    D = mat(ones((m,1))/m)   # 初始权重1/m，概率分布向量,元素之和为1。D在迭代中增加错分数据的权重
+    aggClassEst = mat(zeros((m,1)))       # 记录每个数据点的类别估计累计值
+    for i in range(numIt):
+        # 构建单层决策树
+        bestStump,error,classEst = buildStump(dataArr,classLabels,D)
+        # print "D:",D.T
+        # 根据公式计算弱学习算法权重alpha,使error不等于0,因为分母不能为0
+        alpha = float(0.5*log((1.0-error)/max(error,1e-16)))   # 1/2*In((1-error)/error),分类器的权重。
+        bestStump['alpha'] = alpha           # 存储弱学习算法权重
+        weakClassArr.append(bestStump)       # 弱分类器的列表，存储单层决策树           
+        #print "classEst: ",classEst.T
+        expon = multiply(-1*alpha*mat(classLabels).T,classEst)  # 根据数学公式更改权重
+        D = multiply(D,exp(expon))                              # 为下一次迭代计算新的D
+        D = D/D.sum()    # 下一个分类的各样本的权重D(i+1)
+        # 所有分类器的计算训练错误，如果为0，则提前退出循环（使用中断）
+        aggClassEst += alpha*classEst
+        #print "aggClassEst: ",aggClassEst.T
+        aggErrors = multiply(sign(aggClassEst) != mat(classLabels).T,ones((m,1)))
+        errorRate = aggErrors.sum()/m
+        print "total error: ",errorRate
+        if errorRate == 0.0: break    # 两种情况停止:(1)40个弱分类器的组合 (2)分类误差为0
+    return weakClassArr,aggClassEst
