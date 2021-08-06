@@ -135,20 +135,22 @@ def adaBoostTrainDS(dataArr,classLabels,numIt=40):
     for i in range(numIt):
         # 构建单层决策树
         bestStump,error,classEst = buildStump(dataArr,classLabels,D)
-        # print "D:",D.T
+        # print("D:",D.T)
         # 根据公式计算弱学习算法权重alpha,使error不等于0,因为分母不能为0
         alpha = float(0.5*log((1.0-error)/max(error,1e-16)))   # 1/2*In((1-error)/error),分类器的权重。
         bestStump['alpha'] = alpha           # 存储弱学习算法权重
         weakClassArr.append(bestStump)       # 弱分类器的列表，存储单层决策树           
-        #print "classEst: ",classEst.T
+        # print("classEst: ",classEst.T)
         expon = multiply(-1*alpha*mat(classLabels).T,classEst)  # 根据数学公式更改权重
         D = multiply(D,exp(expon))                              # 为下一次迭代计算新的D
         D = D/D.sum()    # 下一个分类的各样本的权重D(i+1)
         # 所有分类器的计算训练错误，如果为0，则提前退出循环（使用中断）
         aggClassEst += alpha*classEst
-        #print "aggClassEst: ",aggClassEst.T
+        # print("aggClassEst: ",aggClassEst.T)
         aggErrors = multiply(sign(aggClassEst) != mat(classLabels).T,ones((m,1)))
         errorRate = aggErrors.sum()/m
-        print "total error: ",errorRate
+        # print("total error: ",errorRate)
         if errorRate == 0.0: break    # 两种情况停止:(1)40个弱分类器的组合 (2)分类误差为0
-    return weakClassArr,aggClassEst
+    return weakClassArr
+
+print(adaBoostTrainDS(datMat,classLabels,9))
