@@ -147,10 +147,52 @@ def adaBoostTrainDS(dataArr,classLabels,numIt=40):
         # 所有分类器的计算训练错误，如果为0，则提前退出循环（使用中断）
         aggClassEst += alpha*classEst
         # print("aggClassEst: ",aggClassEst.T)
-        aggErrors = multiply(sign(aggClassEst) != mat(classLabels).T,ones((m,1)))
+        aggErrors = multiply(sign(aggClassEst) != mat(classLabels).T,ones((m,1)))   # sign()函数：如果数字为正数，则返回 1；如果数字为 0，则返回零 (0)；如果数字为负数，则返回 -1
         errorRate = aggErrors.sum()/m
-        # print("total error: ",errorRate)
+        print("total error: ",errorRate)
         if errorRate == 0.0: break    # 两种情况停止:(1)40个弱分类器的组合 (2)分类误差为0
     return weakClassArr
 
-print(adaBoostTrainDS(datMat,classLabels,9))
+# print(adaBoostTrainDS(datMat,classLabels,9))
+
+
+'''
+参数：多个待分类样例 dataToClass，多个弱分类器 classifierArr
+'''
+def adaClassify(datToClass,classifierArr):
+    dataMatrix = mat(datToClass)
+    m = shape(dataMatrix)[0]
+    aggClassEst = mat(zeros((m,1)))
+    for i in range(len(classifierArr)):
+        classEst = stumpClassify(dataMatrix,classifierArr[i]['dim'],\
+                                 classifierArr[i]['thresh'],\
+                                 classifierArr[i]['ineq']) 
+        aggClassEst += classifierArr[i]['alpha']*classEst
+        # print(aggClassEst)
+    return sign(aggClassEst)
+
+datArr,labelArr=loadSimpData()
+classifierArr=adaBoostTrainDS(datArr,labelArr,30)
+# print(adaClassify([0,0],classifierArr))
+
+def loadDataSet(fileName):      
+    numFeat = len(open(fileName).readline().split('\t'))
+    dataMat = []; labelMat = []
+    fr = open(fileName)
+    for line in fr.readlines():
+        lineArr =[]
+        curLine = line.strip().split('\t')
+        for i in range(numFeat-1):
+            lineArr.append(float(curLine[i]))
+        dataMat.append(lineArr)
+        labelMat.append(float(curLine[-1]))
+    return dataMat,labelMat
+
+datArr,labelArr=loadDataSet('horseColicTraining2.txt')
+classifierArr=adaBoostTrainDS(datArr,labelArr,10)
+
+testArr,testLabelArr=loadDataSet('horseColicTest2.txt')
+prediction10=adaClassify(testArr,classifierArr)
+errArr=mat(ones((67,1)))    # 有67行数据
+sum=errArr[prediction10!=mat(testLabelArr).T].sum()
+print(sum)
