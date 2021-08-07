@@ -149,9 +149,10 @@ def adaBoostTrainDS(dataArr,classLabels,numIt=40):
         # print("aggClassEst: ",aggClassEst.T)
         aggErrors = multiply(sign(aggClassEst) != mat(classLabels).T,ones((m,1)))   # sign()函数：如果数字为正数，则返回 1；如果数字为 0，则返回零 (0)；如果数字为负数，则返回 -1
         errorRate = aggErrors.sum()/m
-        print("total error: ",errorRate)
+        # print("total error: ",errorRate)
         if errorRate == 0.0: break    # 两种情况停止:(1)40个弱分类器的组合 (2)分类误差为0
-    return weakClassArr
+    # return weakClassArr
+    return weakClassArr,aggClassEst    # plotROC()函数
 
 # print(adaBoostTrainDS(datMat,classLabels,9))
 
@@ -188,11 +189,48 @@ def loadDataSet(fileName):
         labelMat.append(float(curLine[-1]))
     return dataMat,labelMat
 
-datArr,labelArr=loadDataSet('horseColicTraining2.txt')
-classifierArr=adaBoostTrainDS(datArr,labelArr,10)
+# datArr,labelArr=loadDataSet('horseColicTraining2.txt')
+# classifierArr=adaBoostTrainDS(datArr,labelArr,10)
 
-testArr,testLabelArr=loadDataSet('horseColicTest2.txt')
-prediction10=adaClassify(testArr,classifierArr)
-errArr=mat(ones((67,1)))    # 有67行数据
-sum=errArr[prediction10!=mat(testLabelArr).T].sum()
-print(sum)
+# testArr,testLabelArr=loadDataSet('horseColicTest2.txt')
+# prediction10=adaClassify(testArr,classifierArr)
+# errArr=mat(ones((67,1)))    # 有67行数据
+# sum=errArr[prediction10!=mat(testLabelArr).T].sum()
+# print(sum)
+
+'''
+参数：分类器的预测强度(即每个特征对应的类别累计估计值)，数据标签
+'''
+def plotROC(predStrengths, classLabels):
+    import matplotlib.pyplot as plt
+    cur = (1.0,1.0) # 绘制光标的位置
+    ySum = 0.0 # 用于计算AUC的值
+    numPosClas = sum(array(classLabels)==1.0)  # 正例的数目,这里是178
+    yStep = 1/float(numPosClas);      # 纵坐标表示实际正例中被正确识别的概率
+    xStep = 1/float(len(classLabels)-numPosClas)  # 横坐标表示实际反例中被错误识别的概率
+    sortedIndicies = predStrengths.argsort() # 获取排序索引：由小到大
+    fig = plt.figure()
+    fig.clf()
+    ax = plt.subplot(111)
+    print(sortedIndicies.tolist()[0])
+    # 循环遍历所有值，在每个点绘制线段
+    for index in sortedIndicies.tolist()[0]:    # tolist()作用：将矩阵（matrix）和数组（array）转化为列表。
+        if classLabels[index] == 1.0: 
+            delX = 0; delY = yStep    # delX是横坐标变化值，delY是纵坐标变化值
+        else:
+            delX = xStep; delY = 0
+            ySum += cur[1]            # 把每一小段的y值相加，最后乘以xStep就是面积AUC
+        # 从cur到（cur[0]-delX，cur[1]-delY）绘制线
+        ax.plot([cur[0],cur[0]-delX],[cur[1],cur[1]-delY], c='b')  # 从右上到左下画线
+        cur = (cur[0]-delX,cur[1]-delY)       # 画完线之后，当前点作为光标起点
+    ax.plot([0,1],[0,1],'b--')           # 画对角线
+    plt.xlabel('False positive rate'); plt.ylabel('True positive rate')
+    plt.title('ROC curve for AdaBoost horse colic detection system')
+    ax.axis([0,1,0,1])         # 设置坐标轴范围
+    plt.savefig('ROC.png')
+    plt.show()
+    print("the Area Under the Curve is: ",ySum*xStep)
+
+datArr,labelArr=loadDataSet('horseColicTraining2.txt')
+classifierArr,aggClassEst=adaBoostTrainDS(datArr,labelArr,10)
+plotROC(aggClassEst.T,labelArr)
