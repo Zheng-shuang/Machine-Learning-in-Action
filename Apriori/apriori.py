@@ -4,7 +4,7 @@ def loadDataSet():
     return [[1, 3, 4], [2, 3, 5], [1, 2, 3, 5], [2, 5]]
 
 def createC1(dataSet):
-    C1 = []
+    C1 = []      
     for transaction in dataSet:
         for item in transaction:
             if not [item] in C1:
@@ -73,10 +73,11 @@ def generateRules(L, supportData, minConf=0.7):  # 最大频繁项集,支持度�
     for i in range(1, len(L)): # only get the sets with two or more items
         for freqSet in L[i]:
             H1 = [frozenset([item]) for item in freqSet]
-            if (i > 1):
-                rulesFromConseq(freqSet, H1, supportData, bigRuleList, minConf)
-            else:
-                calcConf(freqSet, H1, supportData, bigRuleList, minConf)
+            # if (i > 1):
+            #     rulesFromConseq(freqSet, H1, supportData, bigRuleList, minConf)
+            # else:
+            #     calcConf(freqSet, H1, supportData, bigRuleList, minConf)
+            calcConf(freqSet, H1, supportData, bigRuleList, minConf)
     return bigRuleList         # 满足最小可信度的关联规则
 
 def calcConf(freqSet, H, supportData, brl, minConf=0.7):
@@ -93,16 +94,17 @@ def rulesFromConseq(freqSet, H, supportData, brl, minConf=0.7):
     m = len(H[0])
     if (len(freqSet) > (m + 1)): # 尝试进一步合并
         Hmp1 = aprioriGen(H, m+1)# create Hm+1 new candidates
+        print(Hmp1)
         Hmp1 = calcConf(freqSet, Hmp1, supportData, brl, minConf)
         if (len(Hmp1) > 1):      # 至少需要两个集合才能合并
             rulesFromConseq(freqSet, Hmp1, supportData, brl, minConf)
 
-# L,supportData=apriori(dataSet,minSupport=0.5)
-# rules=generateRules(L,supportData,minConf=0.7)
-# print("rules:",rules)
+L,supportData=apriori(dataSet,minSupport=0.5)
+rules=generateRules(L,supportData,minConf=0.5)
+print("rules:",rules)
 
-mushDatSet=[line.split() for line in open('mushroom.dat').readlines()]
-L,supportData=apriori(mushDatSet,minSupport=0.3)
-for item in L[1]:
-    if item.intersection('2'):
-        print(item)
+# mushDatSet=[line.split() for line in open('mushroom.dat').readlines()]
+# L,supportData=apriori(mushDatSet,minSupport=0.3)
+# for item in L[1]:
+#     if item.intersection('2'):
+#         print(item)
